@@ -40,7 +40,7 @@ jobs:
           # Carpeta que se va a publicar:
           publish_dir: ./public
           # Token para hacer push en la rama gh-pages:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           # Rama donde se publicará el contenido (crea la rama si no existe)
           publish_branch: gh-pages
           # Opcional, si quieres que se force el push:
