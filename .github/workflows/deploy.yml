@@ -1,0 +1,39 @@
+﻿name: Auto Blog Noticias
+
+on:
+  schedule:
+    # Cron en UTC: 30 6 * * * -> 06:30 UTC = 08:30 España
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Python deps
+        run: pip install requests beautifulsoup4
+
+      - name: Run fetch script
+        run: python fetch_news.py
+
+      - name: Setup Hugo Extended
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Build site
+        run: hugo --minify
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./public
+          github_token: ${{ secrets.GITHUB_TOKEN }}
