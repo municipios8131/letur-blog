@@ -1,6 +1,12 @@
 ﻿name: Auto Blog Noticias
 
 on:
+push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '30 6 * * *'
   schedule:
     # Cron en UTC: 30 6 * * * -> 06:30 UTC = 08:30 España
     - cron: '30 6 * * *'
