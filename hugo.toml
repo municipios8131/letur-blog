@@ -1,5 +1,3 @@
-# config.toml
-
 baseURL = 'https://municipios8131.github.io/letur-blog/'
 languageCode = 'es'
 title = 'Blog de Noticias e información'
