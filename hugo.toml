@@ -12,4 +12,4 @@ posts = "/:slug/"
 home = ["HTML", "RSS"]
 
 [params]
-  mainSections = ["posts"]
+  mainSections = ["noticias"]
