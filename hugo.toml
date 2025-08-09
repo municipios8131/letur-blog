@@ -4,12 +4,3 @@ baseURL = 'https://municipios8131.github.io/letur-blog/'
 languageCode = 'es'
 title = 'Blog de Noticias e información'
 theme = "ananke"
-
-[permalinks]
-posts = "/:slug/"
-
-[outputs]
-home = ["HTML", "RSS"]
-
-[params]
-  mainSections = ["noticias"]
