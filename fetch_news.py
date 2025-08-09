@@ -4,9 +4,14 @@ import sqlite3
 import datetime
 from pathlib import Path
 from xml.etree import ElementTree as ET
+import os
+import openai
 
 DB = 'posted.db'
 CONTENT_DIR = Path('content/noticias')
+
+# Inicializar OpenAI con la API key desde variable de entorno
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def init_db():
     conn = sqlite3.connect(DB)
@@ -44,21 +49,41 @@ def fetch_google_news_rss(query="turismo Letur"):
             items.append({'title': title, 'url': link})
     return items
 
-def save_post(item):
+def generate_news_content(title, url):
+    prompt = (
+        f"Escribe un breve artículo de noticias en español basado en este título: \"{title}\".\n"
+        f"La noticia está basada en esta fuente: {url}\n"
+        "Hazlo claro, informativo y profesional, alrededor de 100 palabras."
+    )
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=200,
+            temperature=0.7,
+        )
+        text = response['choices'][0]['message']['content'].strip()
+        return text
+    except Exception as e:
+        print("Error generando texto con OpenAI:", e)
+        return f"Más información en [fuente]({url})"
+
+def save_post(item, content):
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
     date = datetime.date.today().isoformat()
     safe_title = item['title'].replace('"', '').replace("'", "")
     fname = CONTENT_DIR / f"{date}-{hashlib.md5(item['url'].encode()).hexdigest()}.md"
-    content = f"---\ntitle: \"{safe_title}\"\ndate: {date}\n---\n\nÚltimas noticias relacionadas:\n\n- [{item['title']}]({item['url']})\n\nFuente: [Google News](https://news.google.com)\n"
+    md = f"---\ntitle: \"{safe_title}\"\ndate: {date}\n---\n\n{content}\n\nFuente: [{item['title']}]({item['url']})\n"
     with open(fname, 'w', encoding='utf-8') as f:
-        f.write(content)
+        f.write(md)
     print(f"Noticia guardada: {fname}")
 
 def main():
     init_db()
     news = fetch_google_news_rss()
     for item in news:
-        save_post(item)
+        content = generate_news_content(item['title'], item['url'])
+        save_post(item, content)
 
 if __name__ == "__main__":
     main()
