@@ -80,10 +80,18 @@ def save_post(item, content):
 
 def main():
     init_db()
-    news = fetch_google_news_rss()
-    for item in news:
-        content = generate_news_content(item['title'], item['url'])
-        save_post(item, content)
+    # Lista de búsquedas que quieras seguir
+    queries = [
+        "Letur Albacete",
+        "turismo Letur",
+        "Ayuntamiento de Letur"
+    ]
+    for query in queries:
+        news_items = fetch_google_news_rss(query)
+        for item in news_items:
+            content = generate_news_content(item['title'], item['url'])
+            save_post(item, content)
+
 
 if __name__ == "__main__":
     main()
