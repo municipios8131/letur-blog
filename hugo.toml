@@ -2,3 +2,5 @@ baseURL = 'https://municipios8131.github.io/letur-blog/'
 languageCode = 'es'
 title = 'Blog de Noticias e información'
 theme = "ananke"
+[params]
+  subtitle = 'Actualidad en Letur'
