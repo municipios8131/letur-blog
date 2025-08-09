@@ -8,7 +8,7 @@ import os
 import openai
 
 DB = 'posted.db'
-CONTENT_DIR = Path('content/noticias')
+CONTENT_DIR = Path('content/posts')
 
 # Inicializar OpenAI con la API key desde variable de entorno
 openai.api_key = os.getenv('OPENAI_API_KEY')
