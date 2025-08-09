@@ -19,10 +19,12 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Python deps
-        run: pip install requests beautifulsoup4
+      - name: Install Python dependencies
+        run: pip install requests beautifulsoup4 openai
 
       - name: Run fetch script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python fetch_news.py
 
       - name: Setup Hugo Extended
@@ -37,11 +39,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          # Carpeta que se va a publicar:
           publish_dir: ./public
-          # Token para hacer push en la rama gh-pages:
           github_token: ${{ secrets.PAT_TOKEN }}
-          # Rama donde se publicará el contenido (crea la rama si no existe)
           publish_branch: gh-pages
-          # Opcional, si quieres que se force el push:
           force_orphan: true
