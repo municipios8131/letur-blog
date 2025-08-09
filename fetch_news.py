@@ -1,6 +1,9 @@
-﻿import requests, hashlib, sqlite3, datetime
-from bs4 import BeautifulSoup
+import requests
+import hashlib
+import sqlite3
+import datetime
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 DB = 'posted.db'
 CONTENT_DIR = Path('content/noticias')
@@ -24,51 +27,37 @@ def seen_before(url):
     conn.close()
     return False
 
-def fetch_turismoletur():
-    url = "https://turismoletur.com/noticias/"
+def fetch_google_news_rss(query="turismo Letur"):
+    rss_url = f"https://news.google.com/rss/search?q={requests.utils.quote(query)}&hl=es&gl=ES&ceid=ES:es"
     try:
-        r = requests.get(url, timeout=15)
+        r = requests.get(rss_url, timeout=15)
         r.raise_for_status()
     except Exception as e:
-        print("Error fetching turismoletur:", e)
+        print("Error fetching Google News RSS:", e)
         return []
-    soup = BeautifulSoup(r.text, 'html.parser')
-    posts = []
-    # Buscamos artículos en <article> o enlaces en el listado
-    for article in soup.select('article'):
-        h = article.select_one('h2') or article.select_one('h3')
-        if not h: continue
-        a = h.find('a')
-        title = (a.get_text(strip=True) if a else h.get_text(strip=True))
-        link = (a['href'] if a and a.has_attr('href') else None)
-        if link and not link.startswith('http'):
-            link = requests.compat.urljoin(url, link)
+    root = ET.fromstring(r.text)
+    items = []
+    for item in root.findall('.//item'):
+        title = item.find('title').text
+        link = item.find('link').text
         if link and not seen_before(link):
-            posts.append({'title': title, 'url': link, 'content': f"Más info en [fuente]({link})"})
-    # fallback: buscar enlaces directos si no hay <article>
-    if not posts:
-        for a in soup.select('a'):
-            href = a.get('href')
-            txt = a.get_text(strip=True)
-            if href and txt and '/noticias/' in href and not seen_before(href):
-                link = href if href.startswith('http') else requests.compat.urljoin(url, href)
-                posts.append({'title': txt[:80], 'url': link, 'content': f"Más info en [fuente]({link})"})
-    return posts
+            items.append({'title': title, 'url': link})
+    return items
 
 def save_post(item):
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
     date = datetime.date.today().isoformat()
+    safe_title = item['title'].replace('"', '').replace("'", "")
     fname = CONTENT_DIR / f"{date}-{hashlib.md5(item['url'].encode()).hexdigest()}.md"
+    content = f"---\ntitle: \"{safe_title}\"\ndate: {date}\n---\n\nÚltimas noticias relacionadas:\n\n- [{item['title']}]({item['url']})\n\nFuente: [Google News](https://news.google.com)\n"
     with open(fname, 'w', encoding='utf-8') as f:
-        f.write(f"---\ntitle: \"{item['title']}\"\ndate: {date}\n---\n\n{item['content']}\n\nFuente: {item['url']}\n")
-    print(f"Post guardado: {fname}")
+        f.write(content)
+    print(f"Noticia guardada: {fname}")
 
 def main():
     init_db()
-    items = []
-    items += fetch_turismoletur()
-    # Aquí puedes añadir más funciones: fetch_tablon(), fetch_ejemplo(), etc.
-    for item in items:
+    news = fetch_google_news_rss()
+    for item in news:
         save_post(item)
 
 if __name__ == "__main__":
